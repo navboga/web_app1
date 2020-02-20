@@ -1,0 +1,7 @@
+id:0, Request pharase: Ехал грека через реку, letters кусмыч, find result {'у', 'ч', 'к'}
+id:1, Request pharase: Шла саша по шоссе, letters смех, find result {'с', 'е'}
+id:2, Request pharase: Поищем другие буквы в словах, letters хмурый, find result {'р', 'х', 'у', 'ы', 'м'}
+id:0, Request pharase: плавать в море это здорово, letters пан, find result {'а', 'п'}
+id:1, Request pharase: Шить костюмы куклам, letters сшак, find result {'к', 'а', 'с'}
+id:2, Request pharase: Строить дом из коробков, letters кждыав, find result {'в', 'к', 'д'}
+id:3, Request pharase: Забудьте  все что я тут написал, letters тыфвьаждт, find result {'ь', 'т', 'в', 'д', 'а'}
