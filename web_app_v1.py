@@ -43,11 +43,21 @@ def do_search():
 
 # presents the log file on the web
 @app.route('/viewlog')
+#new_versin(return list in list log)
 def view_log():
-    #with open('log_request.txt') as log:
+    log_data=[]
     with open('vsearch.log') as log:
-        log_data=log.read()
-    return escape(log_data)
+        for lines in log:
+            log_data.append([])
+            for item in lines.split('|'):
+                log_data[-1].append(escape(item))
+        return (str(log_data))
+#old version:
+# def view_log():
+#     #with open('log_request.txt') as log:
+#     with open('vsearch.log') as log:
+#         log_data=log.readlines()
+#     return escape(''.join(log_data))
 
 
 
