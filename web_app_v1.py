@@ -44,14 +44,15 @@ def do_search():
 # presents the log file on the web
 @app.route('/viewlog')
 #new_versin(return list in list log)
-def view_log():
+def view_log() -> 'HTML':
     log_data=[]
     with open('vsearch.log') as log:
         for lines in log:
             log_data.append([])
             for item in lines.split('|'):
                 log_data[-1].append(escape(item))
-        return (str(log_data))
+        titles=['FromData', 'Remote_addr', 'User_agent', 'Results']
+        return render_template('viewlog.html',the_title='The log page', the_row_titles=titles, the_data=log_data)
 #old version:
 # def view_log():
 #     #with open('log_request.txt') as log:
