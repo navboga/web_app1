@@ -1,5 +1,6 @@
 from vsearch import search4letters
 from flask import Flask,request,render_template, escape #,redirect
+import mysql.connector
 
 
 
@@ -24,11 +25,29 @@ id = log_request_generator_id()
 
 
 # Add logs requests and response into log file (func from the book)
+# OLD VERSION
+# def log_request(req: 'flask_request', resp: 'str'):
+#     with open('vsearch.log', 'a') as log:
+#         print(req.form, req.remote_addr, req.user_agent, resp, file=log, sep='|')
+
+# ADD LOGS INTO DB
 def log_request(req: 'flask_request', resp: 'str'):
-    with open('vsearch.log', 'a') as log:
-        print(req.form, req.remote_addr, req.user_agent, resp, file=log, sep='|')
-
-
+    dbconfig = {
+        'host': '127.0.0.1',
+        'user': 'vsearch',
+        'password': '123',
+        'database': 'vsearchlogDB',
+    }
+    conn = mysql.connector.connect(**dbconfig)
+    cursor = conn.cursor()
+    _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
+    values (%s, %s, %s, %s, %s)
+    """
+    cursor.execute(_SQL,(req.form['phrase'], req.form['letters'],
+                         req.remote_addr, req.user_agent.browser, resp,))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 # presents the find result page on the web
 @app.route('/search4',methods=['POST'])
