@@ -10,6 +10,8 @@ def view_log():
 )
 
 """
+import mysql.connector
+
 def view_log():
     log_data=[]
     with open('vsearch.log') as log:
@@ -27,3 +29,4 @@ for i in range (len(some_list)):
     for j in range (len(some_list[i])):
         print(some_list[i][j])
 
+class
