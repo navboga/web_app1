@@ -19,15 +19,15 @@ class UseDb():
 
 
 
-dbconfig = {
-    'host': '127.0.0.1',
-    'user': 'web_app',#vsearch
-    'password': 'web_app',#123
-    'database': 'vsearchlogDB',
-    }
+# dbconfig = {
+#     'host': '127.0.0.1',
+#     'user': 'web_app',#vsearch
+#     'password': 'web_app',#123
+#     'database': 'vsearchlogDB',
+#     }
 
-with UseDb(dbconfig) as cursor:
-    _SQL = """show tables"""
-    cursor.execute(_SQL)
-    data = cursor.fetchall()
-print(data)
+# with UseDb(dbconfig) as cursor:
+#     _SQL = """show tables"""
+#     cursor.execute(_SQL)
+#     data = cursor.fetchall()
+# print(data)

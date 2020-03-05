@@ -1,10 +1,18 @@
 from vsearch import search4letters
 from flask import Flask,request,render_template, escape #,redirect
-import mysql.connector
-
+#import mysql.connector
+from ConnDb import UseDb
 
 
 app=Flask(__name__)
+
+app.config['dbconfig'] = {
+    'host': '127.0.0.1',
+    'user': 'vsearch',
+    'password': '123',
+    'database': 'vsearchlogDB',
+}
+
 
 # @app.route('/')
 # def home() ->'302':
@@ -31,23 +39,31 @@ id = log_request_generator_id()
 #         print(req.form, req.remote_addr, req.user_agent, resp, file=log, sep='|')
 
 # ADD LOGS INTO DB
-def log_request(req: 'flask_request', resp: 'str'):
-    dbconfig = {
-        'host': '127.0.0.1',
-        'user': 'vsearch',
-        'password': '123',
-        'database': 'vsearchlogDB',
-    }
-    conn = mysql.connector.connect(**dbconfig)
-    cursor = conn.cursor()
-    _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
-    values (%s, %s, %s, %s, %s)
-    """
-    cursor.execute(_SQL,(req.form['phrase'], req.form['letters'],
-                         req.remote_addr, req.user_agent.browser, resp,))
-    conn.commit()
-    cursor.close()
-    conn.close()
+# OLD_VERSION
+# def log_request(req: 'flask_request', resp: 'str'):
+#
+#     conn = mysql.connector.connect(**dbconfig)
+#     cursor = conn.cursor()
+#     _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
+#     values (%s, %s, %s, %s, %s)
+#     """
+#     cursor.execute(_SQL,(req.form['phrase'], req.form['letters'],
+#                          req.remote_addr, req.user_agent.browser, resp,))
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+
+# ADD LOGS INTO DB
+# NEW VERSION
+def log_request(req: 'flask_request', resp: 'str',):
+    with UseDb(app.config['dbconfig']) as cursor:
+        _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
+        values (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(_SQL, (req.form['phrase'], req.form['letters'],
+                             req.remote_addr, req.user_agent.browser, resp,))
+
+
 
 # presents the find result page on the web
 @app.route('/search4',methods=['POST'])
@@ -62,17 +78,28 @@ def do_search():
 
 # presents the log file on the web
 @app.route('/viewlog')
-#new_versin(return list in list log)
+# new version 1.2. (get data from db)
 def view_log() -> 'HTML':
-    log_data=[]
-    with open('vsearch.log') as log:
-        for lines in log:
-            log_data.append([])
-            for item in lines.split('|'):
-                log_data[-1].append(escape(item))
-        titles=['FromData', 'Remote_addr', 'User_agent', 'Results']
-        return render_template('viewlog.html',the_title='The log page', the_row_titles=titles, the_data=log_data)
-#old version:
+
+    with UseDb(app.config['dbconfig']) as cursor:
+        _SQL = """select phrase, letters,ip, browser_string,results from log order by ts desc"""
+        cursor.execute(_SQL)
+        contents=cursor.fetchall()
+
+    titles=['Phrase','Letters', 'Remote_addr', 'User_agent', 'Results']
+    return render_template('viewlog.html',the_title='The log page', the_row_titles=titles, the_data=contents)
+
+#old version 1.1(return list in list log)
+# def view_log() -> 'HTML':
+#     log_data=[]
+#     with open('vsearch.log') as log:
+#         for lines in log:
+#             log_data.append([])
+#             for item in lines.split('|'):
+#                 log_data[-1].append(escape(item))
+#         titles=['FromData', 'Remote_addr', 'User_agent', 'Results']
+#         return render_template('viewlog.html',the_title='The log page', the_row_titles=titles, the_data=log_data)
+#old version 1.0:
 # def view_log():
 #     #with open('log_request.txt') as log:
 #     with open('vsearch.log') as log:
