@@ -10,6 +10,15 @@ def view_log():
 )
 
 """
+# Штатно удаление не существ элем из словаря вызывает исключение,
+# если не прописан defoult ,что возвращать- в данном случае прописал None,
+#  что бы избежать исключения
+# some_dict = {'apple':'green', 'limon':'yellow'}
+# print(some_dict)
+# some_dict.pop('limon')
+# print(some_dict)
+# some_dict.pop('limon',None)
+
 import mysql.connector
 
 def view_log():
@@ -28,5 +37,3 @@ some_list=view_log()
 for i in range (len(some_list)):
     for j in range (len(some_list[i])):
         print(some_list[i][j])
-
-class
