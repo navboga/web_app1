@@ -1,4 +1,5 @@
 from flask import Flask,session
+from checker import check_logged_in
 
 app = Flask(__name__)
 
@@ -13,14 +14,17 @@ def do_logon() -> str:
     return 'You are now logged in'
 
 @app.route('/page1')
+@check_logged_in
 def page1() -> str:
     return "page 1"
 
 @app.route('/page2')
+@check_logged_in
 def page2() -> str:
     return "page 2"
 
 @app.route('/page3')
+@check_logged_in
 def page3() -> str:
     return "page 3"
 
@@ -28,13 +32,6 @@ def page3() -> str:
 def logout() -> str:
     session.pop('logged_in', None)
     return 'Now you logged out'
-
-@app.route('/status')
-def status() -> str:
-    if 'logged_in' in session:
-        return 'You are currently logged in'
-    return 'You are NOT logged in'
-
 
 
 app.secret_key = 'Try something do'

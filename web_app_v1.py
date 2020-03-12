@@ -2,18 +2,29 @@ from vsearch import search4letters
 from flask import Flask,request,render_template, escape #,redirect
 #import mysql.connector
 from ConnDb import UseDb
-
+from flask import session
+from checker import check_logged_in
 
 app=Flask(__name__)
 
+app.secret_key = 'IamDoSomethingNew'
+
+# app.config['dbconfig'] = {
+#     'host': '127.0.0.1',
+#     'user': 'vsearch',
+#     'password': '123',
+#     'database': 'vsearchlogDB',
+# }
+
 app.config['dbconfig'] = {
     'host': '127.0.0.1',
-    'user': 'vsearch',
-    'password': '123',
+    'user': 'web_app',
+    'password': 'web_app',
     'database': 'vsearchlogDB',
 }
 
 
+# редирект на другую страницу
 # @app.route('/')
 # def home() ->'302':
 #     return redirect('/entry')
@@ -78,6 +89,7 @@ def do_search():
 
 # presents the log file on the web
 @app.route('/viewlog')
+@check_logged_in
 # new version 1.2. (get data from db)
 def view_log() -> 'HTML':
 
@@ -115,8 +127,15 @@ def entry_page() -> 'html':
     return render_template('entry.html', the_title = 'Welcome to search letter on the WEB')
 
 
+@app.route('/login')
+def log_in():
+    session['logged_in'] = True
+    return 'Now you logged in'
 
-
+@app.route('/logoff')
+def log_off():
+    session.pop('logged_in',None)
+    return 'Now you logged out'
 
 
 
