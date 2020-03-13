@@ -1,27 +1,29 @@
 from vsearch import search4letters
 from flask import Flask,request,render_template, escape #,redirect
-#import mysql.connector
+#import mysql.connector импортируем в классе менеджере контекста ConnDb
 from ConnDb import UseDb
 from flask import session
 from checker import check_logged_in
+from time import sleep
+
 
 app=Flask(__name__)
 
 app.secret_key = 'IamDoSomethingNew'
 
-# app.config['dbconfig'] = {
-#     'host': '127.0.0.1',
-#     'user': 'vsearch',
-#     'password': '123',
-#     'database': 'vsearchlogDB',
-# }
-
 app.config['dbconfig'] = {
     'host': '127.0.0.1',
-    'user': 'web_app',
-    'password': 'web_app',
+    'user': 'vsearch',
+    'password': '123',
     'database': 'vsearchlogDB',
 }
+
+# app.config['dbconfig'] = {
+#     'host': '127.0.0.1',
+#     'user': 'web_app',
+#     'password': 'web_app',
+#     'database': 'vsearchlogDB',
+# }
 
 
 # редирект на другую страницу
@@ -67,6 +69,7 @@ id = log_request_generator_id()
 # ADD LOGS INTO DB
 # NEW VERSION
 def log_request(req: 'flask_request', resp: 'str',):
+    #raise TimeoutError
     with UseDb(app.config['dbconfig']) as cursor:
         _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
         values (%s, %s, %s, %s, %s)
@@ -84,7 +87,12 @@ def do_search():
     the_title = 'You search result here!'
     search_result = str(search4letters(input_phrase, input_letters))
     #log_request(request.form, search_result)
-    log_request(request, search_result)
+    try:
+        log_request(request, search_result)
+    except:
+        print('Cant connect to DB')
+    # except Exception as err:
+    #     print('Some over error occured', str(err))
     return render_template('results.html', the_title = the_title, the_phrase = input_phrase, the_letters = input_letters, the_results = search_result)
 
 # presents the log file on the web
@@ -142,5 +150,3 @@ def log_off():
 
 if __name__=='__main__':
     app.run(debug=True)
-
-
