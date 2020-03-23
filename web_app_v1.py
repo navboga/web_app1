@@ -1,10 +1,11 @@
 from vsearch import search4letters
-from flask import Flask,request,render_template, escape #,redirect
-#import mysql.connector импортируем в классе менеджере контекста ConnDb
-from ConnDb import UseDb, ConnectionError
+from flask import Flask,request,render_template, copy_current_request_context # escape #,redirect
+# #import mysql.connector импортируем в классе менеджере контекста ConnDb
+from ConnDb import UseDb, ConnectionError,CredentialsError,SQLError
 from flask import session
 from checker import check_logged_in
 import sys
+from threading import Thread
 from time import sleep
 
 
@@ -69,21 +70,23 @@ id = log_request_generator_id()
 
 # ADD LOGS INTO DB
 # NEW VERSION
-def log_request(req: 'flask_request', resp: 'str',):
-    #raise TimeoutError
-    #try: # Exception handler
-        with UseDb(app.config['dbconfig']) as cursor:
-            _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
-            values (%s, %s, %s, %s, %s)
-            """
-
-            cursor.execute(_SQL, (req.form['phrase'], req.form['letters'],
-                                 req.remote_addr, req.user_agent.browser, resp,))
-
-    # except ConnectionError as err:
-    #     print('Catch Connection Err',str(err))
-    # except Exception as err:
-    #     print('Exception log_request function call with err: ', str(err))
+# функция log_request перенесена в фунцию do_search которая ее вызывает, для возможности декорирования
+# def log_request(req: 'flask_request', resp: 'str',):
+#         sleep(15)
+#     #raise TimeoutError
+#     #try: # Exception handler
+#         with UseDb(app.config['dbconfig']) as cursor:
+#             _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
+#             values (%s, %s, %s, %s, %s)
+#             """
+#
+#             cursor.execute(_SQL, (req.form['phrase'], req.form['letters'],
+#                                  req.remote_addr, req.user_agent.browser, resp,))
+#
+#     # except ConnectionError as err:
+#     #     print('Catch Connection Err',str(err))
+#     # except Exception as err:
+#     #     print('Exception log_request function call with err: ', str(err))
 
 
 
@@ -96,10 +99,30 @@ def do_search():
     the_title = 'You search result here!'
     search_result = str(search4letters(input_phrase, input_letters))
     #log_request(request.form, search_result)
-    try: # Exception handler Первый вариант - оборачиваем функцию в try except
-        log_request(request, search_result)
+    try: # Exception handler Первый вариант - оборачиваем функцию в try except.     Перехватываем проблемы подключения к БД
+        #log_request(request, search_result)
+        # ADD LOGS INTO DB
+        # NEW VERSION
+        @copy_current_request_context
+        def log_request(req: 'flask_request', resp: 'str', ):
+            sleep(30)
+            # raise TimeoutError
+            # try: # Exception handler
+            with UseDb(app.config['dbconfig']) as cursor:
+                _SQL = """ insert into log (phrase, letters, ip, browser_string, results)
+                    values (%s, %s, %s, %s, %s)
+                    """
+
+                cursor.execute(_SQL, (req.form['phrase'], req.form['letters'],
+                                      req.remote_addr, req.user_agent.browser, resp,))
+        t=Thread(target=log_request, args=(request, search_result))
+        t.start()
     except ConnectionError as err:
-        print('Catch Connection Err',str(err))
+        print('DB not available now,check connect to DB',str(err))
+
+    except CredentialsError as err:
+        print('Connection Error to DB,wrong db name or password',str(err))
+
     except Exception as err:
         print('Exception log_request function call with err: ', str(err))
     return render_template('results.html', the_title = the_title, the_phrase = input_phrase, the_letters = input_letters, the_results = search_result)
@@ -115,7 +138,13 @@ def view_log() -> 'HTML':
             cursor.execute(_SQL)
             contents=cursor.fetchall()
     except ConnectionError as err:
-        print('Catch Connection Err',str(err))
+        print('DB not available now,check connect to DB! Error:',str(err))
+        return ('Something was wrong')
+    except CredentialsError as err:
+        print('Connection Error to DB,wrong db name or password! Error:', str(err))
+        return ('Something was wrong')
+    except SQLError as err:
+        print('SQL Error, is your query correct? Error:', str(err))
         return ('Something was wrong')
     except Exception as err :
         print ('Cant select log from DB',sys.exc_info(),'come from err', str(err), sep='\n')
